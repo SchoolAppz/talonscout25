@@ -158,6 +158,12 @@
     <section id="auto" class="page">
         <h1 class="header">Auto</h1>
         <form action="#teleop">
+            <label for="startingPosition">Starting Position</label>
+            <select id="startingPosition">
+                <option value="middle">Middle</option>
+                <option value="left">Left</option>
+                <option value="right">Right</option>
+            </select><br><br>
             <input type="checkbox" id="leave" name="leave" value="Leave">
             <label for="leave">Leave</label><br>
             <button type="button" id="coralScoredBtnAuto">Coral scored</button>
@@ -336,7 +342,8 @@
             teleop_coral_l4: 0,
             teleop_algae_net: 0,
             teleop_algae_processor: 0,
-            algaeRemovedFromReef: 0
+            algaeRemovedFromReef: 0,
+            startingPosition: 'middle'
         };
 
         function resetForm() {
@@ -367,6 +374,7 @@
             teleopAlgaeHistory.length = 0;
             algaeRemovedFromReef = 0;
             teleopAlgaeActions.length = 0;
+            document.getElementById('startingPosition').value = 'middle';
             updateScoreDisplays();
         }
 
@@ -441,7 +449,8 @@
                 teleop_coral_l4,
                 teleop_algae_net,
                 teleop_algae_processor,
-                algaeRemovedFromReef
+                algaeRemovedFromReef,
+                startingPosition: document.getElementById('startingPosition').value
             };
 
             // Save the current match data
@@ -458,27 +467,23 @@
             const driveStatus = driveLabels[parseInt(formData.driveCondition)] || 'Fine';
             
             const tsvData = [
-                // Headers
-                ['Scout', 'Match', 'Team', 'Leave', 
-                 'Auto L1', 'Auto L2', 'Auto L3', 'Auto L4', 'Auto Net', 'Auto Proc',  // Auto
-                 'Tele L1', 'Tele L2', 'Tele L3', 'Tele L4', 'Tele Net', 'Tele Proc', 'Reef',  // Teleop
+                ['Scout', 'Match', 'Team', 'Start', 'Leave', 
+                 'Auto L1', 'Auto L2', 'Auto L3', 'Auto L4', 'Auto Net', 'Auto Proc',
+                 'Tele L1', 'Tele L2', 'Tele L3', 'Tele L4', 'Tele Net', 'Tele Proc', 'Reef',
                  'Climb', 'Robot', 'Drive', 'Defense', 'Comments'
                 ].join('\t'),
-                
-                // Data
                 [
                     formData.scout || '',
                     formData.match || '',
                     formData.team || '',
+                    formData.startingPosition || 'middle',
                     formData.leave ? 'Yes' : 'No',
-                    // Auto scores
                     formData.auto_coral_l1 || 0,
                     formData.auto_coral_l2 || 0,
                     formData.auto_coral_l3 || 0,
                     formData.auto_coral_l4 || 0,
                     formData.auto_algae_net || 0,
                     formData.auto_algae_processor || 0,
-                    // Teleop scores
                     formData.teleop_coral_l1 || 0,
                     formData.teleop_coral_l2 || 0,
                     formData.teleop_coral_l3 || 0,
@@ -486,7 +491,6 @@
                     formData.teleop_algae_net || 0,
                     formData.teleop_algae_processor || 0,
                     formData.algaeRemovedFromReef || 0,
-                    // End game and post match
                     formData.endgameResult || 'Not Attempted',
                     robotStatus,
                     driveStatus,
@@ -501,34 +505,29 @@
         });
 
         document.getElementById('exportBtn').addEventListener('click', function () {
-            // Format scores
             const robotLabels = ['Tipped', 'Very Tippy', 'Tippy', 'Fine'];
             const driveLabels = ['Disabled', 'Stalled', 'Broken', 'Fine'];
             const robotStatus = robotLabels[parseInt(formData.robotCondition)] || 'Fine';
             const driveStatus = driveLabels[parseInt(formData.driveCondition)] || 'Fine';
             
             const csvData = [
-                // Headers
-                ['Scout', 'Match', 'Team', 'Leave', 
-                 'Auto L1', 'Auto L2', 'Auto L3', 'Auto L4', 'Auto Net', 'Auto Proc',  // Auto
-                 'Tele L1', 'Tele L2', 'Tele L3', 'Tele L4', 'Tele Net', 'Tele Proc', 'Reef',  // Teleop
+                ['Scout', 'Match', 'Team', 'Start', 'Leave', 
+                 'Auto L1', 'Auto L2', 'Auto L3', 'Auto L4', 'Auto Net', 'Auto Proc',
+                 'Tele L1', 'Tele L2', 'Tele L3', 'Tele L4', 'Tele Net', 'Tele Proc', 'Reef',
                  'Climb', 'Robot', 'Drive', 'Defense', 'Comments'
                 ].join(','),
-                
-                // Data
                 [
                     formData.scout || '',
                     formData.match || '',
                     formData.team || '',
+                    formData.startingPosition || 'middle',
                     formData.leave ? 'Yes' : 'No',
-                    // Auto scores
                     formData.auto_coral_l1 || 0,
                     formData.auto_coral_l2 || 0,
                     formData.auto_coral_l3 || 0,
                     formData.auto_coral_l4 || 0,
                     formData.auto_algae_net || 0,
                     formData.auto_algae_processor || 0,
-                    // Teleop scores
                     formData.teleop_coral_l1 || 0,
                     formData.teleop_coral_l2 || 0,
                     formData.teleop_coral_l3 || 0,
@@ -536,7 +535,6 @@
                     formData.teleop_algae_net || 0,
                     formData.teleop_algae_processor || 0,
                     formData.algaeRemovedFromReef || 0,
-                    // End game and post match
                     formData.endgameResult || 'Not Attempted',
                     robotStatus,
                     driveStatus,
@@ -826,27 +824,23 @@
             const driveStatus = driveLabels[parseInt(formData.driveCondition)] || 'Fine';
             
             const data = [
-                // Headers
-                ['Scout', 'Match', 'Team', 'Leave', 
-                 'Auto L1', 'Auto L2', 'Auto L3', 'Auto L4', 'Auto Net', 'Auto Proc',  // Auto
-                 'Tele L1', 'Tele L2', 'Tele L3', 'Tele L4', 'Tele Net', 'Tele Proc', 'Reef',  // Teleop
+                ['Scout', 'Match', 'Team', 'Start', 'Leave', 
+                 'Auto L1', 'Auto L2', 'Auto L3', 'Auto L4', 'Auto Net', 'Auto Proc',
+                 'Tele L1', 'Tele L2', 'Tele L3', 'Tele L4', 'Tele Net', 'Tele Proc', 'Reef',
                  'Climb', 'Robot', 'Drive', 'Defense', 'Comments'
                 ].join(','),
-                
-                // Data
                 [
                     formData.scout || '',
                     formData.match || '',
                     formData.team || '',
+                    formData.startingPosition || 'middle',
                     formData.leave ? 'Yes' : 'No',
-                    // Auto scores
                     formData.auto_coral_l1 || 0,
                     formData.auto_coral_l2 || 0,
                     formData.auto_coral_l3 || 0,
                     formData.auto_coral_l4 || 0,
                     formData.auto_algae_net || 0,
                     formData.auto_algae_processor || 0,
-                    // Teleop scores
                     formData.teleop_coral_l1 || 0,
                     formData.teleop_coral_l2 || 0,
                     formData.teleop_coral_l3 || 0,
@@ -854,7 +848,6 @@
                     formData.teleop_algae_net || 0,
                     formData.teleop_algae_processor || 0,
                     formData.algaeRemovedFromReef || 0,
-                    // End game and post match
                     formData.endgameResult || 'Not Attempted',
                     robotStatus,
                     driveStatus,
@@ -863,12 +856,10 @@
                 ].join(',')
             ].join('\n');
 
-            // Generate QR Code
             const qr = qrcode(0, 'L');
             qr.addData(data);
             qr.make();
 
-            // Display QR Code
             const container = document.getElementById('qrCodeContainer');
             const qrDiv = document.getElementById('qrCode');
             qrDiv.innerHTML = qr.createImgTag(5);
