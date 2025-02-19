@@ -1,0 +1,881 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Talon Scouting</title>
+    <link rel="stylesheet" href="styles.css">
+    <script src="https://cdn.jsdelivr.net/npm/qrcode-generator@1.4.4/qrcode.min.js"></script>
+    <style>
+        .scoring-dialog {
+            display: none;
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            z-index: 1000;
+        }
+
+        .dialog-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0,0,0,0.5);
+            z-index: 999;
+        }
+
+        .slider-container {
+            width: 100%;
+            max-width: 300px;
+            margin: 10px 0;
+        }
+
+        .slider-labels {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 5px;
+            width: 100%;
+            max-width: 300px;
+        }
+
+        .slider-label {
+            text-align: center;
+            font-size: 0.8em;
+            flex: 1;
+            position: relative;
+        }
+
+        input[type="range"] {
+            width: 100%;
+            max-width: 300px;
+        }
+
+        .score-display {
+            background: #2b2b2b;
+            padding: 15px;
+            margin: 10px 0;
+            border-radius: 8px;
+            font-size: 0.9em;
+            color: #ffffff;
+            border: 2px solid #ff0000;
+        }
+
+        .score-display p {
+            margin: 8px 0;
+        }
+
+        .score-value {
+            color: #ff0000;
+            font-weight: bold;
+            margin: 0 3px;
+        }
+
+        #qrCodeContainer {
+            background: #2b2b2b;
+            border: 2px solid #ff0000;
+            text-align: center;
+        }
+
+        #qrCodeContainer button {
+            margin-top: 10px;
+            padding: 5px 15px;
+            background: #ff0000;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+
+        #qrCodeContainer button:hover {
+            background: #cc0000;
+        }
+
+        #qrCode img {
+            margin: 10px;
+            padding: 10px;
+            background: white;
+            border-radius: 4px;
+        }
+    </style>
+</head>
+
+<body>
+   
+    <nav class="navbar">
+        <div class="logo">
+            <img src="talon.png" alt="Talon Logo" class="logo-img">
+            <h1>Talon Scout</h1>
+        </div>
+        <div class="nav-links">
+            <a href="#pre" class="nav-link">Pre-Match</a>
+            <a href="#auto" class="nav-link">Auto</a>
+            <a href="#teleop" class="nav-link">Teleop</a>
+            <a href="#endgame" class="nav-link">Endgame</a>
+            <a href="#post" class="nav-link">Post-Match</a>
+        </div>
+    </nav>
+
+   
+    <section id="pre" class="page">
+        <h1 class="header">Pre-Match</h1>
+        <form action="#auto">
+            <label for="scout">Scout initials (2 letters)</label>
+            <input type="text" 
+                   id="scout" 
+                   name="scout" 
+                   maxlength="2" 
+                   pattern="[A-Za-z]{2}" 
+                   title="Please enter exactly 2 letters"
+                   required><br><br>
+            <label for="match#">Match number (1-500)</label>
+            <input type="number" 
+                   id="match#" 
+                   name="match#" 
+                   min="1" 
+                   max="500" 
+                   title="Please enter a number between 1 and 500"
+                   required><br><br>
+            <label for="team#">Team number (1-15000)</label>
+            <input type="number" 
+                   id="team#" 
+                   name="team#" 
+                   min="1" 
+                   max="15000" 
+                   title="Please enter a number between 1 and 15000"
+                   required><br><br>
+        </form>
+    </section>
+
+   
+    <section id="auto" class="page">
+        <h1 class="header">Auto</h1>
+        <form action="#teleop">
+            <input type="checkbox" id="leave" name="leave" value="Leave">
+            <label for="leave">Leave</label><br>
+            <button type="button" id="coralScoredBtnAuto">Coral scored</button>
+            <button type="button" id="removeCoralBtnAuto">Remove Coral</button>
+            <button type="button" id="algaeScoredBtnAuto">Algae scored</button>
+            <button type="button" id="removeAlgaeBtnAuto">Remove Algae</button>
+        </form>
+        <div class="score-display">
+            <p>Coral Scores: L1: <span class="score-value" id="autoCoralL1">0</span>, 
+               L2: <span class="score-value" id="autoCoralL2">0</span>, 
+               L3: <span class="score-value" id="autoCoralL3">0</span>, 
+               L4: <span class="score-value" id="autoCoralL4">0</span></p>
+            <p>Algae Scores: Net: <span class="score-value" id="autoAlgaeNet">0</span>, 
+               Processor: <span class="score-value" id="autoAlgaeProcessor">0</span></p>
+        </div>
+        <dialog id="coralScoreDialogAuto">
+            <h2>Select Level</h2>
+            <button class="dialog-button" id="L1Auto">L1</button>
+            <button class="dialog-button" id="L2Auto">L2</button>
+            <button class="dialog-button" id="L3Auto">L3</button>
+            <button class="dialog-button" id="L4Auto">L4</button>
+            <button class="dialog-button" id="backAuto">Back</button>
+        </dialog>
+        <dialog id="algaeScoreDialogAuto">
+            <h2>Select Location</h2>
+            <button class="dialog-button" id="NetAuto">Net</button>
+            <button class="dialog-button" id="ProcessorAuto">Processor</button>
+            <button class="dialog-button" id="backAutoAlgae">Back</button>
+        </dialog>
+    </section>
+
+
+    <section id="teleop" class="page">
+        <h1 class="header">Teleop</h1>
+        <form action="#endgame">
+            <button type="button" id="coralScoredBtnT">Coral scored</button>
+            <button type="button" id="removeCoralBtnT">Remove Coral</button>
+            <button type="button" id="algaeScoredBtnTeleop">Algae scored</button>
+            <button type="button" id="removeAlgaeBtnTeleop">Remove Algae</button>
+            <button type="button" id="algaeRemovedFromReefBtn">Algae removed from reef</button>
+        </form>
+        <div class="score-display">
+            <p>Coral Scores: L1: <span class="score-value" id="teleopCoralL1">0</span>, 
+               L2: <span class="score-value" id="teleopCoralL2">0</span>, 
+               L3: <span class="score-value" id="teleopCoralL3">0</span>, 
+               L4: <span class="score-value" id="teleopCoralL4">0</span></p>
+            <p>Algae Scores: Net: <span class="score-value" id="teleopAlgaeNet">0</span>, 
+               Processor: <span class="score-value" id="teleopAlgaeProcessor">0</span></p>
+            <p>Algae Removed From Reef: <span class="score-value" id="reefAlgaeRemoved">0</span></p>
+        </div>
+        <dialog id="coralScoreDialogTeleop">
+            <h2>Select Level</h2>
+            <button class="dialog-button" id="L1Teleop">L1</button>
+            <button class="dialog-button" id="L2Teleop">L2</button>
+            <button class="dialog-button" id="L3Teleop">L3</button>
+            <button class="dialog-button" id="L4Teleop">L4</button>
+            <button class="dialog-button" id="backTeleop">Back</button>
+        </dialog>
+        <dialog id="algaeScoreDialogTeleop">
+            <h2>Select Location</h2>
+            <button class="dialog-button" id="NetTeleop">Net</button>
+            <button class="dialog-button" id="ProcessorTeleop">Processor</button>
+            <button class="dialog-button" id="backTeleopAlgae">Back</button>
+        </dialog>
+    </section>
+
+   
+    <section id="endgame" class="page">
+        <h1 class="header">Endgame</h1>
+        <form action="#post">
+            <label for="endgameResult">Endgame Result</label>
+            <select id="endgameResult">
+                <option value="none">None</option>
+                <option value="deep">Deep</option>
+                <option value="shallow">Shallow</option>
+                <option value="park">Park</option>
+                <option value="failed">Failed</option>
+            </select><br><br>
+        </form>
+    </section>
+
+  
+    <section id="post" class="page">
+        <h1 class="header">Post-Match</h1>
+        <form action="#finish">
+            <div class="slider-container">
+                <label for="robotCondition">Robot Condition</label><br>
+                <input type="range" id="robotCondition" name="robotCondition" min="0" max="3" value="3">
+                <div class="slider-labels">
+                    <span class="slider-label">Tipped</span>
+                    <span class="slider-label">Very Tippy</span>
+                    <span class="slider-label">Tippy</span>
+                    <span class="slider-label">Fine</span>
+                </div>
+            </div>
+
+            <div class="slider-container">
+                <label for="driveCondition">Drive Condition</label><br>
+                <input type="range" id="driveCondition" name="driveCondition" min="0" max="3" value="3">
+                <div class="slider-labels">
+                    <span class="slider-label">Disabled</span>
+                    <span class="slider-label">Stalled</span>
+                    <span class="slider-label">Broken</span>
+                    <span class="slider-label">Fine</span>
+                </div>
+            </div>
+
+            <div class="custom-checkbox-container">
+                <input type="checkbox" id="defense" name="defense">
+                <label for="defense">
+                    <div class="checkbox"></div> Defense
+                </label>
+            </div><br><br>
+
+            <label for="comments">Additional Comments</label><br>
+            <textarea id="comments" name="comments" rows="4" cols="50"></textarea><br><br>
+
+            <div style="background: #2b2b2b; color: #ffeb3b; padding: 10px; margin: 10px 0; border-radius: 4px; text-align: center; font-weight: bold; border: 1px solid #ffeb3b;">
+                ⚠️ Make sure to click "New Match" before exporting data!
+            </div>
+
+            <input type="button" id="newMatchBtn" value="New Match">
+            <input type="button" id="exportBtn" value="Export CSV">
+            <input type="button" id="copyBtn" value="Copy to Clipboard">
+            <input type="button" id="qrBtn" value="Generate QR">
+        </form>
+    </section>
+
+    <div class="dialog-overlay" id="dialogOverlay"></div>
+    <div class="scoring-dialog" id="scoringDialog">
+        <h2>Coral Scoring</h2>
+        <form id="scoringForm">
+            <div>
+                <label for="coralHealth">Coral Health (1-5):</label>
+                <input type="number" id="coralHealth" min="1" max="5" required>
+            </div>
+            <div>
+                <label for="coralCoverage">Coral Coverage (%):</label>
+                <input type="number" id="coralCoverage" min="0" max="100" required>
+            </div>
+            <div>
+                <label for="notes">Notes:</label>
+                <textarea id="notes"></textarea>
+            </div>
+            <button type="submit">Save Score</button>
+            <button type="button" onclick="closeDialog()">Cancel</button>
+        </form>
+    </div>
+
+    <div id="qrCodeContainer" style="display: none; position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); 
+        background: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); z-index: 1001;">
+        <div id="qrCode"></div>
+        <button onclick="document.getElementById('qrCodeContainer').style.display='none'">Close</button>
+    </div>
+
+    <script>
+        const formData = {
+            scout: '',
+            match: '',
+            team: '',
+            leave: false,
+            endgameResult: 'none',
+            robotCondition: 3,
+            driveCondition: 3,
+            defense: false,
+            comments: '',
+            auto_coral_l1: 0,
+            auto_coral_l2: 0,
+            auto_coral_l3: 0,
+            auto_coral_l4: 0,
+            auto_algae_net: 0,
+            auto_algae_processor: 0,
+            teleop_coral_l1: 0,
+            teleop_coral_l2: 0,
+            teleop_coral_l3: 0,
+            teleop_coral_l4: 0,
+            teleop_algae_net: 0,
+            teleop_algae_processor: 0,
+            algaeRemovedFromReef: 0
+        };
+
+        function resetForm() {
+            document.getElementById('scout').value = '';
+            document.getElementById('match#').value = '';
+            document.getElementById('team#').value = '';
+            document.getElementById('leave').checked = false;
+            document.getElementById('endgameResult').value = 'none';
+            document.getElementById('robotCondition').value = 3;
+            document.getElementById('driveCondition').value = 3;
+            document.getElementById('defense').checked = false;
+            document.getElementById('comments').value = '';
+            auto_coral_l1 = 0;
+            auto_coral_l2 = 0;
+            auto_coral_l3 = 0;
+            auto_coral_l4 = 0;
+            teleop_coral_l1 = 0;
+            teleop_coral_l2 = 0;
+            teleop_coral_l3 = 0;
+            teleop_coral_l4 = 0;
+            auto_algae_net = 0;
+            auto_algae_processor = 0;
+            teleop_algae_net = 0;
+            teleop_algae_processor = 0;
+            autoCoralHistory.length = 0;
+            teleopCoralHistory.length = 0;
+            autoAlgaeHistory.length = 0;
+            teleopAlgaeHistory.length = 0;
+            algaeRemovedFromReef = 0;
+            teleopAlgaeActions.length = 0;
+            updateScoreDisplays();
+        }
+
+        document.getElementById('scout').addEventListener('input', function(e) {
+            // Convert to uppercase
+            this.value = this.value.toUpperCase();
+            // Remove any non-letter characters
+            this.value = this.value.replace(/[^A-Z]/g, '');
+        });
+
+        document.getElementById('match#').addEventListener('input', function(e) {
+            const value = parseInt(this.value);
+            if (value > 500) {
+                this.value = 500;
+            } else if (value < 0) {
+                this.value = 0;
+            }
+        });
+
+        document.getElementById('team#').addEventListener('input', function(e) {
+            const value = parseInt(this.value);
+            if (value > 15000) {
+                this.value = 15000;
+            } else if (value < 0) {
+                this.value = 0;
+            }
+        });
+
+        document.getElementById('newMatchBtn').addEventListener('click', function () {
+            const scoutInput = document.getElementById('scout');
+            const matchInput = document.getElementById('match#');
+            const teamInput = document.getElementById('team#');
+
+            // Validate inputs
+            if (!/^[A-Z]{2}$/.test(scoutInput.value)) {
+                alert('Please enter exactly 2 letters for scout initials');
+                return;
+            }
+
+            const matchNum = parseInt(matchInput.value);
+            if (isNaN(matchNum) || matchNum < 1 || matchNum > 500) {
+                alert('Please enter a valid match number (1-500)');
+                return;
+            }
+
+            const teamNum = parseInt(teamInput.value);
+            if (isNaN(teamNum) || teamNum < 1 || teamNum > 15000) {
+                alert('Please enter a valid team number (1-15000)');
+                return;
+            }
+
+            // Create a new object with the current match data
+            const matchData = {
+                scout: scoutInput.value.toUpperCase(),
+                match: matchNum,
+                team: teamNum,
+                leave: document.getElementById('leave').checked,
+                endgameResult: document.getElementById('endgameResult').value,
+                robotCondition: document.getElementById('robotCondition').value,
+                driveCondition: document.getElementById('driveCondition').value,
+                defense: document.getElementById('defense').checked,
+                comments: document.getElementById('comments').value.trim(),
+                auto_coral_l1,
+                auto_coral_l2,
+                auto_coral_l3,
+                auto_coral_l4,
+                auto_algae_net,
+                auto_algae_processor,
+                teleop_coral_l1,
+                teleop_coral_l2,
+                teleop_coral_l3,
+                teleop_coral_l4,
+                teleop_algae_net,
+                teleop_algae_processor,
+                algaeRemovedFromReef
+            };
+
+            // Save the current match data
+            Object.assign(formData, matchData);
+
+            // Now reset the form for the next match
+            resetForm();
+        });
+
+        document.getElementById('copyBtn').addEventListener('click', function () {
+            const robotLabels = ['Tipped', 'Very Tippy', 'Tippy', 'Fine'];
+            const driveLabels = ['Disabled', 'Stalled', 'Broken', 'Fine'];
+            const robotStatus = robotLabels[parseInt(formData.robotCondition)] || 'Fine';
+            const driveStatus = driveLabels[parseInt(formData.driveCondition)] || 'Fine';
+            
+            const tsvData = [
+                // Headers
+                ['Scout', 'Match', 'Team', 'Leave', 
+                 'Auto L1', 'Auto L2', 'Auto L3', 'Auto L4', 'Auto Net', 'Auto Proc',  // Auto
+                 'Tele L1', 'Tele L2', 'Tele L3', 'Tele L4', 'Tele Net', 'Tele Proc', 'Reef',  // Teleop
+                 'Climb', 'Robot', 'Drive', 'Defense', 'Comments'
+                ].join('\t'),
+                
+                // Data
+                [
+                    formData.scout || '',
+                    formData.match || '',
+                    formData.team || '',
+                    formData.leave ? 'Yes' : 'No',
+                    // Auto scores
+                    formData.auto_coral_l1 || 0,
+                    formData.auto_coral_l2 || 0,
+                    formData.auto_coral_l3 || 0,
+                    formData.auto_coral_l4 || 0,
+                    formData.auto_algae_net || 0,
+                    formData.auto_algae_processor || 0,
+                    // Teleop scores
+                    formData.teleop_coral_l1 || 0,
+                    formData.teleop_coral_l2 || 0,
+                    formData.teleop_coral_l3 || 0,
+                    formData.teleop_coral_l4 || 0,
+                    formData.teleop_algae_net || 0,
+                    formData.teleop_algae_processor || 0,
+                    formData.algaeRemovedFromReef || 0,
+                    // End game and post match
+                    formData.endgameResult || 'Not Attempted',
+                    robotStatus,
+                    driveStatus,
+                    formData.defense ? 'Yes' : 'No',
+                    formData.comments || ''
+                ].join('\t')
+            ].join('\n');
+
+            navigator.clipboard.writeText(tsvData).then(() => {
+                alert('Data copied to clipboard!');
+            });
+        });
+
+        document.getElementById('exportBtn').addEventListener('click', function () {
+            // Format scores
+            const robotLabels = ['Tipped', 'Very Tippy', 'Tippy', 'Fine'];
+            const driveLabels = ['Disabled', 'Stalled', 'Broken', 'Fine'];
+            const robotStatus = robotLabels[parseInt(formData.robotCondition)] || 'Fine';
+            const driveStatus = driveLabels[parseInt(formData.driveCondition)] || 'Fine';
+            
+            const csvData = [
+                // Headers
+                ['Scout', 'Match', 'Team', 'Leave', 
+                 'Auto L1', 'Auto L2', 'Auto L3', 'Auto L4', 'Auto Net', 'Auto Proc',  // Auto
+                 'Tele L1', 'Tele L2', 'Tele L3', 'Tele L4', 'Tele Net', 'Tele Proc', 'Reef',  // Teleop
+                 'Climb', 'Robot', 'Drive', 'Defense', 'Comments'
+                ].join(','),
+                
+                // Data
+                [
+                    formData.scout || '',
+                    formData.match || '',
+                    formData.team || '',
+                    formData.leave ? 'Yes' : 'No',
+                    // Auto scores
+                    formData.auto_coral_l1 || 0,
+                    formData.auto_coral_l2 || 0,
+                    formData.auto_coral_l3 || 0,
+                    formData.auto_coral_l4 || 0,
+                    formData.auto_algae_net || 0,
+                    formData.auto_algae_processor || 0,
+                    // Teleop scores
+                    formData.teleop_coral_l1 || 0,
+                    formData.teleop_coral_l2 || 0,
+                    formData.teleop_coral_l3 || 0,
+                    formData.teleop_coral_l4 || 0,
+                    formData.teleop_algae_net || 0,
+                    formData.teleop_algae_processor || 0,
+                    formData.algaeRemovedFromReef || 0,
+                    // End game and post match
+                    formData.endgameResult || 'Not Attempted',
+                    robotStatus,
+                    driveStatus,
+                    formData.defense ? 'Yes' : 'No',
+                    formData.comments || ''
+                ].join(',')
+            ].join('\n');
+
+            const blob = new Blob([csvData], { type: 'text/csv' });
+            const url = URL.createObjectURL(blob);
+            const link = document.createElement('a');
+            link.href = url;
+            link.download = 'match_data.csv';
+            link.click();
+            URL.revokeObjectURL(url);
+        });
+
+        // Fix: Add proper button references
+        const coralScoredBtnAuto = document.getElementById('coralScoredBtnAuto');
+        const coralScoredBtnTeleop = document.getElementById('coralScoredBtnT');
+        const algaeScoredBtnTeleop = document.getElementById('algaeScoredBtnTeleop');
+
+        // Fix: Add proper dialog references
+        const coralScoreDialogAuto = document.getElementById('coralScoreDialogAuto');
+        const coralScoreDialogTeleop = document.getElementById('coralScoreDialogTeleop');
+        const algaeScoreDialogTeleop = document.getElementById('algaeScoreDialogTeleop');
+
+        // Initialize counters
+        let auto_coral_l1 = 0;
+        let auto_coral_l2 = 0;
+        let auto_coral_l3 = 0;
+        let auto_coral_l4 = 0;
+        let teleop_coral_l1 = 0;
+        let teleop_coral_l2 = 0;
+        let teleop_coral_l3 = 0;
+        let teleop_coral_l4 = 0;
+
+        // Add these variables with the other counter initializations
+        let auto_algae_net = 0;
+        let auto_algae_processor = 0;
+        let teleop_algae_net = 0;
+        let teleop_algae_processor = 0;
+
+        // Add arrays to track scoring history
+        const autoCoralHistory = [];
+        const teleopCoralHistory = [];
+        const autoAlgaeHistory = [];
+        const teleopAlgaeHistory = [];
+
+        // Add this to track all algae actions in teleop
+        const teleopAlgaeActions = []; // Will store both scoring and reef removal actions
+
+        // Fix: Update event listeners
+        coralScoredBtnTeleop.addEventListener('click', function() {
+            coralScoreDialogTeleop.showModal(); 
+        });
+
+        coralScoredBtnAuto.addEventListener('click', function() {
+            coralScoreDialogAuto.showModal();
+        });
+
+        algaeScoredBtnTeleop.addEventListener('click', function() {
+            algaeScoreDialogTeleop.showModal();
+        });
+
+        document.querySelectorAll('#coralScoreDialogTeleop .dialog-button').forEach(button => {
+            button.addEventListener('click', function() {
+                const coralLevel = button.textContent;
+                if (coralLevel !== 'Back') {
+                    if (coralLevel === 'L1') {
+                        teleop_coral_l1++;
+                        teleopCoralHistory.push('L1');
+                    }
+                    else if (coralLevel === 'L2') {
+                        teleop_coral_l2++;
+                        teleopCoralHistory.push('L2');
+                    }
+                    else if (coralLevel === 'L3') {
+                        teleop_coral_l3++;
+                        teleopCoralHistory.push('L3');
+                    }
+                    else if (coralLevel === 'L4') {
+                        teleop_coral_l4++;
+                        teleopCoralHistory.push('L4');
+                    }
+                }
+                coralScoreDialogTeleop.close();
+                updateScoreDisplays();
+            });
+        }); 
+
+        document.querySelectorAll('#coralScoreDialogAuto .dialog-button').forEach(button => {
+            button.addEventListener('click', function() {
+                const coralLevel = button.textContent;
+                if (coralLevel !== 'Back') {
+                    if (coralLevel === 'L1') {
+                        auto_coral_l1++;
+                        autoCoralHistory.push('L1');
+                    }
+                    else if (coralLevel === 'L2') {
+                        auto_coral_l2++;
+                        autoCoralHistory.push('L2');
+                    }
+                    else if (coralLevel === 'L3') {
+                        auto_coral_l3++;
+                        autoCoralHistory.push('L3');
+                    }
+                    else if (coralLevel === 'L4') {
+                        auto_coral_l4++;
+                        autoCoralHistory.push('L4');
+                    }
+                }
+                coralScoreDialogAuto.close();
+                updateScoreDisplays();
+            });
+        });
+
+        document.querySelectorAll('#algaeScoreDialogTeleop .dialog-button').forEach(button => {
+            button.addEventListener('click', function() {
+                const location = button.textContent;
+                if (location !== 'Back') {
+                    if (location === 'Net') {
+                        teleop_algae_net++;
+                        teleopAlgaeActions.push('Net');
+                    } else if (location === 'Processor') {
+                        teleop_algae_processor++;
+                        teleopAlgaeActions.push('Processor');
+                    }
+                }
+                algaeScoreDialogTeleop.close();
+                updateScoreDisplays();
+            });
+        });
+
+        document.querySelectorAll('#algaeScoreDialogAuto .dialog-button').forEach(button => {
+            button.addEventListener('click', function() {
+                const location = button.textContent;
+                if (location !== 'Back') {
+                    if (location === 'Net') {
+                        auto_algae_net++;
+                        autoAlgaeHistory.push('Net');
+                    } else if (location === 'Processor') {
+                        auto_algae_processor++;
+                        autoAlgaeHistory.push('Processor');
+                    }
+                }
+                algaeScoreDialogAuto.close();
+                updateScoreDisplays();
+            });
+        });
+
+        function openScoringDialog() {
+            document.getElementById('dialogOverlay').style.display = 'block';
+            document.getElementById('scoringDialog').style.display = 'block';
+        }
+
+        function closeDialog() {
+            document.getElementById('dialogOverlay').style.display = 'none';
+            document.getElementById('scoringDialog').style.display = 'none';
+        }
+
+        document.getElementById('scoringForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            const health = document.getElementById('coralHealth').value;
+            const coverage = document.getElementById('coralCoverage').value;
+            const notes = document.getElementById('notes').value;
+            
+            // TODO: Add your logic here to save the scoring data
+            console.log('Coral Score:', { health, coverage, notes });
+            
+            closeDialog();
+        });
+
+        // Add this with your other JavaScript code
+        const robotConditionSlider = document.getElementById('robotCondition');
+        const driveConditionSlider = document.getElementById('driveCondition');
+
+        function updateSliderLabels(slider) {
+            const labels = slider.nextElementSibling.getElementsByClassName('slider-label');
+            const value = slider.value;
+            
+            Array.from(labels).forEach((label, index) => {
+                if (index === parseInt(value)) {
+                    label.style.fontWeight = 'bold';
+                    label.style.color = '#000';
+                } else {
+                    label.style.fontWeight = 'normal';
+                    label.style.color = '#666';
+                }
+            });
+        }
+
+        robotConditionSlider.addEventListener('input', () => updateSliderLabels(robotConditionSlider));
+        driveConditionSlider.addEventListener('input', () => updateSliderLabels(driveConditionSlider));
+
+        // Initialize labels
+        updateSliderLabels(robotConditionSlider);
+        updateSliderLabels(driveConditionSlider);
+
+        // Add remove button handlers
+        document.getElementById('removeCoralBtnAuto').addEventListener('click', function() {
+            const lastCoral = autoCoralHistory.pop();
+            if (lastCoral) {
+                if (lastCoral === 'L1') auto_coral_l1--;
+                else if (lastCoral === 'L2') auto_coral_l2--;
+                else if (lastCoral === 'L3') auto_coral_l3--;
+                else if (lastCoral === 'L4') auto_coral_l4--;
+            }
+            updateScoreDisplays();
+        });
+
+        document.getElementById('removeCoralBtnT').addEventListener('click', function() {
+            const lastCoral = teleopCoralHistory.pop();
+            if (lastCoral) {
+                if (lastCoral === 'L1') teleop_coral_l1--;
+                else if (lastCoral === 'L2') teleop_coral_l2--;
+                else if (lastCoral === 'L3') teleop_coral_l3--;
+                else if (lastCoral === 'L4') teleop_coral_l4--;
+            }
+            updateScoreDisplays();
+        });
+
+        document.getElementById('removeAlgaeBtnAuto').addEventListener('click', function() {
+            const lastAlgae = autoAlgaeHistory.pop();
+            if (lastAlgae) {
+                if (lastAlgae === 'Net') auto_algae_net--;
+                else if (lastAlgae === 'Processor') auto_algae_processor--;
+            }
+            updateScoreDisplays();
+        });
+
+        document.getElementById('removeAlgaeBtnTeleop').addEventListener('click', function() {
+            const lastAction = teleopAlgaeActions.pop();
+            if (lastAction) {
+                if (lastAction === 'Net') teleop_algae_net--;
+                else if (lastAction === 'Processor') teleop_algae_processor--;
+                else if (lastAction === 'Reef') algaeRemovedFromReef--;
+            }
+            updateScoreDisplays();
+        });
+
+        // Add this with the other button references
+        const algaeScoredBtnAuto = document.getElementById('algaeScoredBtnAuto');
+        const algaeScoreDialogAuto = document.getElementById('algaeScoreDialogAuto');
+
+        // Add this with the other event listeners
+        algaeScoredBtnAuto.addEventListener('click', function() {
+            algaeScoreDialogAuto.showModal();
+        });
+
+        // Add this with the other variable initializations
+        let algaeRemovedFromReef = 0;
+
+        // Add this with the other button event listeners
+        document.getElementById('algaeRemovedFromReefBtn').addEventListener('click', function() {
+            algaeRemovedFromReef++;
+            teleopAlgaeActions.push('Reef');
+            updateScoreDisplays();
+        });
+
+        // Update the score display function to include the new counter
+        function updateScoreDisplays() {
+            // Update Auto scores
+            document.getElementById('autoCoralL1').textContent = auto_coral_l1;
+            document.getElementById('autoCoralL2').textContent = auto_coral_l2;
+            document.getElementById('autoCoralL3').textContent = auto_coral_l3;
+            document.getElementById('autoCoralL4').textContent = auto_coral_l4;
+            document.getElementById('autoAlgaeNet').textContent = auto_algae_net;
+            document.getElementById('autoAlgaeProcessor').textContent = auto_algae_processor;
+
+            // Update Teleop scores
+            document.getElementById('teleopCoralL1').textContent = teleop_coral_l1;
+            document.getElementById('teleopCoralL2').textContent = teleop_coral_l2;
+            document.getElementById('teleopCoralL3').textContent = teleop_coral_l3;
+            document.getElementById('teleopCoralL4').textContent = teleop_coral_l4;
+            document.getElementById('teleopAlgaeNet').textContent = teleop_algae_net;
+            document.getElementById('teleopAlgaeProcessor').textContent = teleop_algae_processor;
+
+            // Add this line
+            document.getElementById('reefAlgaeRemoved').textContent = algaeRemovedFromReef;
+        }
+
+        document.getElementById('qrBtn').addEventListener('click', function () {
+            const robotLabels = ['Tipped', 'Very Tippy', 'Tippy', 'Fine'];
+            const driveLabels = ['Disabled', 'Stalled', 'Broken', 'Fine'];
+            const robotStatus = robotLabels[parseInt(formData.robotCondition)] || 'Fine';
+            const driveStatus = driveLabels[parseInt(formData.driveCondition)] || 'Fine';
+            
+            const data = [
+                // Headers
+                ['Scout', 'Match', 'Team', 'Leave', 
+                 'Auto L1', 'Auto L2', 'Auto L3', 'Auto L4', 'Auto Net', 'Auto Proc',  // Auto
+                 'Tele L1', 'Tele L2', 'Tele L3', 'Tele L4', 'Tele Net', 'Tele Proc', 'Reef',  // Teleop
+                 'Climb', 'Robot', 'Drive', 'Defense', 'Comments'
+                ].join(','),
+                
+                // Data
+                [
+                    formData.scout || '',
+                    formData.match || '',
+                    formData.team || '',
+                    formData.leave ? 'Yes' : 'No',
+                    // Auto scores
+                    formData.auto_coral_l1 || 0,
+                    formData.auto_coral_l2 || 0,
+                    formData.auto_coral_l3 || 0,
+                    formData.auto_coral_l4 || 0,
+                    formData.auto_algae_net || 0,
+                    formData.auto_algae_processor || 0,
+                    // Teleop scores
+                    formData.teleop_coral_l1 || 0,
+                    formData.teleop_coral_l2 || 0,
+                    formData.teleop_coral_l3 || 0,
+                    formData.teleop_coral_l4 || 0,
+                    formData.teleop_algae_net || 0,
+                    formData.teleop_algae_processor || 0,
+                    formData.algaeRemovedFromReef || 0,
+                    // End game and post match
+                    formData.endgameResult || 'Not Attempted',
+                    robotStatus,
+                    driveStatus,
+                    formData.defense ? 'Yes' : 'No',
+                    formData.comments || ''
+                ].join(',')
+            ].join('\n');
+
+            // Generate QR Code
+            const qr = qrcode(0, 'L');
+            qr.addData(data);
+            qr.make();
+
+            // Display QR Code
+            const container = document.getElementById('qrCodeContainer');
+            const qrDiv = document.getElementById('qrCode');
+            qrDiv.innerHTML = qr.createImgTag(5);
+            container.style.display = 'block';
+        });
+    </script>
+</body>
+
+</html>
+
