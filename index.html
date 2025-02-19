@@ -4,7 +4,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Talon Scouting</title>
+    <title>Reef Scout</title>
+    <link rel="icon" href="al.png">
     <link rel="stylesheet" href="styles.css">
     <script src="https://cdn.jsdelivr.net/npm/qrcode-generator@1.4.4/qrcode.min.js"></script>
     <style>
@@ -111,8 +112,8 @@
    
     <nav class="navbar">
         <div class="logo">
-            <img src="talon.png" alt="Talon Logo" class="logo-img">
-            <h1>Talon Scout</h1>
+            <!-- <img src="talon.png" alt="Talon Logo" class="logo-img"> -->
+            <h1>Reef Scout</h1>
         </div>
         <div class="nav-links">
             <a href="#pre" class="nav-link">Pre-Match</a>
@@ -127,7 +128,7 @@
     <section id="pre" class="page">
         <h1 class="header">Pre-Match</h1>
         <form action="#auto">
-            <label for="scout">Scout initials (2 letters)</label>
+            <label for="scout">Scout initials</label>
             <input type="text" 
                    id="scout" 
                    name="scout" 
@@ -135,7 +136,7 @@
                    pattern="[A-Za-z]{2}" 
                    title="Please enter exactly 2 letters"
                    required><br><br>
-            <label for="match#">Match number (1-500)</label>
+            <label for="match#">Match number</label>
             <input type="number" 
                    id="match#" 
                    name="match#" 
@@ -143,7 +144,7 @@
                    max="500" 
                    title="Please enter a number between 1 and 500"
                    required><br><br>
-            <label for="team#">Team number (1-15000)</label>
+            <label for="team#">Team number</label>
             <input type="number" 
                    id="team#" 
                    name="team#" 
